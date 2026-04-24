@@ -12,4 +12,5 @@ class Address extends Model
         'address_line',
         'is_default',
     ];
+    .
 }
