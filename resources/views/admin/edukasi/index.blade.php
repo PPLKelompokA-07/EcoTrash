@@ -32,7 +32,7 @@
                         <td class="py-4 px-4 text-on-surface font-medium">
                             <div class="flex items-center gap-3">
                                 @if($artikel->gambar_thumbnail)
-                                    <img src="{{ asset($artikel->gambar_thumbnail) }}" class="w-10 h-10 rounded-lg object-cover bg-surface-dim" alt="Thumbnail">
+                                    <img src="{{ $artikel->thumbnail_url }}" class="w-10 h-10 rounded-lg object-cover bg-surface-dim" alt="Thumbnail">
                                 @endif
                                 <span>{{ $artikel->judul }}</span>
                             </div>

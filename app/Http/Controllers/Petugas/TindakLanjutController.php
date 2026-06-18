@@ -141,7 +141,8 @@ class TindakLanjutController extends Controller
         }
 
         // Upload foto hasil pembersihan
-        $fotoPath = $request->file('foto_hasil')->store('laporan_selesai', 'public');
+        $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
+        $fotoPath = $request->file('foto_hasil')->store('laporan_selesai', $disk);
 
         // Update laporan
         $laporan->update([

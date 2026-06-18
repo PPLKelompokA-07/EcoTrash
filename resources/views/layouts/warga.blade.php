@@ -162,8 +162,8 @@
                         </div>
                         <div
                             class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold overflow-hidden">
-                            @if(Auth::user()->foto_profil)
-                                <img src="{{ asset('storage/' . Auth::user()->foto_profil) }}" alt="Avatar" class="w-full h-full object-cover">
+                            @if(Auth::user()->foto_profil_url)
+                                <img src="{{ Auth::user()->foto_profil_url }}" alt="Avatar" class="w-full h-full object-cover">
                             @else
                                 {{ substr(Auth::user()->nama ?? 'U', 0, 1) }}
                             @endif

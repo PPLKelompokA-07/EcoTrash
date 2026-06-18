@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class PesananPengangkutan extends Model
 {
@@ -53,6 +54,24 @@ class PesananPengangkutan extends Model
             'total_harga_akhir' => 'integer',
             'selisih_harga' => 'integer',
         ];
+    }
+
+    /**
+     * URL foto bukti selesai (local & cloud compatible).
+     */
+    public function getFotoBuktiSelesaiUrlAttribute(): ?string
+    {
+        if (!$this->foto_bukti_selesai) return null;
+        return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->foto_bukti_selesai);
+    }
+
+    /**
+     * URL foto kendala (local & cloud compatible).
+     */
+    public function getFotoKendalaUrlAttribute(): ?string
+    {
+        if (!$this->foto_kendala) return null;
+        return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->foto_kendala);
     }
 
     public function warga(): BelongsTo

@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -53,6 +54,29 @@ class ProfilController extends Controller
         $user->update($request->validated());
 
         return redirect()->back()->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * Ubah kata sandi warga.
+     */
+    public function changePassword(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'password_lama'             => ['required', 'string'],
+            'password'                  => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (!Hash::check($request->password_lama, $user->password)) {
+            return redirect()->back()->withErrors(['password_lama' => 'Kata sandi lama tidak cocok.']);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()->back()->with('success', 'Kata sandi berhasil diperbarui.');
     }
 
     /**
@@ -165,21 +189,22 @@ class ProfilController extends Controller
         ]);
 
         $user = Auth::user();
+        $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
 
         // Hapus foto lama jika ada
-        if ($user->foto_profil && Storage::disk('public')->exists($user->foto_profil)) {
-            Storage::disk('public')->delete($user->foto_profil);
+        if ($user->foto_profil && Storage::disk($disk)->exists($user->foto_profil)) {
+            Storage::disk($disk)->delete($user->foto_profil);
         }
 
         // Simpan foto baru
-        $path = $request->file('foto')->store('foto_profil', 'public');
-        
+        $path = $request->file('foto')->store('foto_profil', $disk);
+
         $user->update([
             'foto_profil' => $path
         ]);
 
         return response()->json([
-            'url' => asset('storage/' . $path)
+            'url' => Storage::disk($disk)->url($path)
         ]);
     }
 }

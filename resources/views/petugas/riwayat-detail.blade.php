@@ -91,23 +91,23 @@
 
             <!-- Foto Bukti -->
             @php
-                $fotoBukti = $type === 'pesanan' ? $item->foto_bukti_selesai : $item->foto_bukti_selesai_petugas;
+                $fotoBuktiUrl = $type === 'pesanan' ? $item->foto_bukti_selesai_url : $item->foto_bukti_selesai_petugas_url;
             @endphp
-            @if($fotoBukti)
+            @if($fotoBuktiUrl)
             <div>
                 <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3 px-2">Foto Bukti</p>
                 <div class="w-full h-48 rounded-3xl overflow-hidden border border-outline shadow-sm relative group">
-                    <img src="{{ asset('storage/' . $fotoBukti) }}" alt="Foto Bukti" class="w-full h-full object-cover">
+                    <img src="{{ $fotoBuktiUrl }}" alt="Foto Bukti" class="w-full h-full object-cover">
                 </div>
             </div>
             @endif
 
             <!-- Foto Kendala (jika ada) -->
-            @if($type === 'pesanan' && $item->foto_kendala)
+            @if($type === 'pesanan' && $item->foto_kendala_url)
             <div>
                 <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3 px-2">Foto Kendala</p>
                 <div class="w-full h-48 rounded-3xl overflow-hidden border border-outline shadow-sm relative group">
-                    <img src="{{ asset('storage/' . $item->foto_kendala) }}" alt="Foto Kendala" class="w-full h-full object-cover">
+                    <img src="{{ $item->foto_kendala_url }}" alt="Foto Kendala" class="w-full h-full object-cover">
                 </div>
             </div>
             @endif

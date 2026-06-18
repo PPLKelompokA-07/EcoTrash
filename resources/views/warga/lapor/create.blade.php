@@ -95,6 +95,7 @@
                 @csrf
                 <input type="hidden" name="lat" id="lat">
                 <input type="hidden" name="lng" id="lng">
+                <input type="hidden" name="alamat_lokasi" id="alamat_lokasi">
 
                 <div class="px-6 pb-6 md:p-8 overflow-y-auto flex-1 flex flex-col gap-6 md:gap-8 pt-2 md:pt-8">
                     <div>
@@ -173,7 +174,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var map = L.map('map', {zoomControl: !L.Browser.mobile}).setView([-6.200000, 106.816666], 15);
+        var defaultLat = {{ $defaultLat ?? -6.200000 }};
+        var defaultLng = {{ $defaultLng ?? 106.816666 }};
+
+        var map = L.map('map', {zoomControl: !L.Browser.mobile}).setView([defaultLat, defaultLng], 15);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap',
             maxZoom: 19
@@ -187,11 +191,30 @@
         document.getElementById('lat').value = center.lat.toFixed(7);
         document.getElementById('lng').value = center.lng.toFixed(7);
 
-        // Update hidden inputs when map moves
+        // Reverse geocoding menggunakan Nominatim OSM (gratis, tanpa API key)
+        function reverseGeocode(lat, lng) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lng=${lng}&accept-language=id`, {
+                headers: { 'Accept-Language': 'id' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                var addr = data.display_name || (lat.toFixed(5) + ', ' + lng.toFixed(5));
+                document.getElementById('alamat_lokasi').value = addr;
+            })
+            .catch(() => {
+                document.getElementById('alamat_lokasi').value = lat.toFixed(5) + ', ' + lng.toFixed(5);
+            });
+        }
+
+        // Jalankan geocoding awal
+        reverseGeocode(center.lat, center.lng);
+
+        // Update hidden inputs dan geocoding saat peta digeser
         map.on('moveend', function () {
             var center = map.getCenter();
             document.getElementById('lat').value = center.lat.toFixed(7);
             document.getElementById('lng').value = center.lng.toFixed(7);
+            reverseGeocode(center.lat, center.lng);
         });
 
         // Also set coordinates right before form submit as safety net

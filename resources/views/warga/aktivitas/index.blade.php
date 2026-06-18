@@ -34,7 +34,7 @@
         'status' => $l->status,
         'deskripsi' => $l->deskripsi,
         'alamat_lokasi' => $l->alamat_lokasi,
-        'foto' => $l->foto_laporan_warga ? asset('storage/' . $l->foto_laporan_warga) : 'https://images.unsplash.com/photo-1605333396825-724bc297341e?q=80&w=800&auto=format&fit=crop',
+        'foto' => $l->foto_laporan_warga_url ?? 'https://images.unsplash.com/photo-1605333396825-724bc297341e?q=80&w=800&auto=format&fit=crop',
         'created_at' => $l->created_at ? $l->created_at->translatedFormat('d M Y, H:i') : '-',
     ])),
     openPesanan(id) {
@@ -122,7 +122,7 @@
                 <div class="bg-white border border-outline rounded-3xl p-5 md:p-6 shadow-sm hover:shadow-md transition-shadow flex gap-5 cursor-pointer group"
                      @click="openLaporan({{ $item->id }})">
                     <div class="w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-surface-dim overflow-hidden border border-outline shrink-0 shadow-inner">
-                        <img src="{{ $item->foto_laporan_warga ? asset('storage/' . $item->foto_laporan_warga) : 'https://images.unsplash.com/photo-1605333396825-724bc297341e?q=80&w=200&auto=format&fit=crop' }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                        <img src="{{ $item->foto_laporan_warga_url ?? 'https://images.unsplash.com/photo-1605333396825-724bc297341e?q=80&w=200&auto=format&fit=crop' }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                     </div>
                     <div class="flex flex-col justify-between flex-1 py-1">
                         <div class="flex justify-between items-start mb-2">

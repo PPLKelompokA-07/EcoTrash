@@ -154,7 +154,7 @@
             </div>
 
             <!-- Thumbnail Upload -->
-            <div x-data="{ previewUrl: '{{ $artikel->gambar_thumbnail ? asset($artikel->gambar_thumbnail) : null }}' }">
+            <div x-data="{ previewUrl: '{{ $artikel->thumbnail_url ?? null }}' }">
                 <label class="block font-medium text-sm text-on-surface mb-1">Gambar Thumbnail <span class="text-red-500">*</span></label>
                 <input type="file" name="gambar_thumbnail" id="gambar_thumbnail" accept="image/*" class="hidden" @change="const file = $event.target.files[0]; if (file) { previewUrl = URL.createObjectURL(file); }">
                 <div onclick="document.getElementById('gambar_thumbnail').click()" class="w-full min-h-[10rem] border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-dim hover:border-primary transition-colors cursor-pointer group p-4">

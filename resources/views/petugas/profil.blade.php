@@ -1,6 +1,6 @@
 <x-petugas-layout>
     <div x-data="{ 
-        fotoPreview: '{{ $petugas->foto_profil ? asset('storage/' . $petugas->foto_profil) : '' }}',
+        fotoPreview: '{{ $petugas->foto_profil_url ?? '' }}',
         handleFile(e) {
             if(e.target.files.length > 0){
                 const file = e.target.files[0];

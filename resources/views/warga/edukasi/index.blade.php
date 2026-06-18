@@ -74,7 +74,7 @@
         @forelse($artikels as $artikel)
             <div @click="window.location.href='{{ route('warga.edukasi.show', $artikel->id) }}'" class="bg-white border border-outline rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col relative group cursor-pointer">
                 <div class="h-48 md:h-56 bg-surface-dim relative overflow-hidden">
-                    <img src="{{ asset($artikel->gambar_thumbnail) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <img src="{{ $artikel->thumbnail_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                     
                     <button @click.stop="toggleBookmark({{ $artikel->id }})" class="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md flex items-center justify-center rounded-full text-white hover:bg-white/40 hover:scale-110 transition-all shadow-sm">

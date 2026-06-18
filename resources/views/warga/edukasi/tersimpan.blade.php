@@ -22,7 +22,7 @@
         @forelse($artikels as $artikel)
             <a href="{{ route('warga.edukasi.show', $artikel->id) }}" class="group bg-white border border-outline rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all flex flex-col h-full">
                 <div class="h-40 md:h-48 relative overflow-hidden">
-                    <img src="{{ asset($artikel->gambar_thumbnail) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Thumbnail">
+                    <img src="{{ $artikel->thumbnail_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Thumbnail">
                     <div class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-amber-500 shadow-sm z-10">
                         <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
                     </div>

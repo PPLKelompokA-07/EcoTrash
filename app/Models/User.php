@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -32,6 +33,16 @@ class User extends Authenticatable
     public function isAdmin(): bool { return $this->role === 'admin'; }
     public function isWarga(): bool { return $this->role === 'warga'; }
     public function isPetugas(): bool { return $this->role === 'petugas'; }
+
+    // === Accessors ===
+    /**
+     * URL foto profil yang kompatibel dengan local storage maupun cloud (S3).
+     */
+    public function getFotoProfilUrlAttribute(): ?string
+    {
+        if (!$this->foto_profil) return null;
+        return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->foto_profil);
+    }
 
     public function hasSetupAddress(): bool
     {

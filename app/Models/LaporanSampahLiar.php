@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class LaporanSampahLiar extends Model
 {
@@ -35,6 +36,24 @@ class LaporanSampahLiar extends Model
             'lng' => 'decimal:7',
             'koin_reward' => 'integer',
         ];
+    }
+
+    /**
+     * URL foto laporan warga (local & cloud compatible).
+     */
+    public function getFotoLaporanWargaUrlAttribute(): ?string
+    {
+        if (!$this->foto_laporan_warga) return null;
+        return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->foto_laporan_warga);
+    }
+
+    /**
+     * URL foto bukti selesai petugas (local & cloud compatible).
+     */
+    public function getFotoBuktiSelesaiPetugasUrlAttribute(): ?string
+    {
+        if (!$this->foto_bukti_selesai_petugas) return null;
+        return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->foto_bukti_selesai_petugas);
     }
 
     public function warga(): BelongsTo

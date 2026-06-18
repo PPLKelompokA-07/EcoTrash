@@ -8,7 +8,7 @@
             </div>
             <a href="{{ route('petugas.profil') }}" class="w-12 h-12 rounded-full bg-primary/20 text-primary flex items-center justify-center border-2 border-white shadow-sm shrink-0 overflow-hidden">
                 @if($petugas->foto_profil)
-                    <img src="{{ asset('storage/' . $petugas->foto_profil) }}" class="w-full h-full object-cover">
+                    <img src="{{ $petugas->foto_profil_url }}" class="w-full h-full object-cover">
                 @else
                     <span class="material-symbols-outlined text-[24px]">account_circle</span>
                 @endif
@@ -78,7 +78,7 @@
                 <a href="{{ route('petugas.laporan.detail', ['id' => $laporan->id]) }}" class="block glass-card rounded-3xl p-5 hover:scale-[0.99] transition-transform border-orange-200">
                     <div class="flex items-start gap-4">
                         <div class="w-14 h-14 rounded-2xl overflow-hidden shrink-0 bg-surface-variant">
-                            <img src="{{ $laporan->foto_laporan_warga ? asset('storage/' . $laporan->foto_laporan_warga) : 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?auto=format&fit=crop&w=150&q=80' }}" alt="Sampah" class="w-full h-full object-cover">
+                            <img src="{{ $laporan->foto_laporan_warga_url ?? 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?auto=format&fit=crop&w=150&q=80' }}" alt="Sampah" class="w-full h-full object-cover">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">

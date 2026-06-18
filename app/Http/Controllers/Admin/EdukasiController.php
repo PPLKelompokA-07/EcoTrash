@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ArtikelEdukasi;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class EdukasiController extends Controller
 {
@@ -51,17 +51,9 @@ class EdukasiController extends Controller
         $data['penulis_admin_id'] = auth()->id();
 
         if ($request->hasFile('gambar_thumbnail')) {
-            $file = $request->file('gambar_thumbnail');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            
-            // Simpan ke public/edukasi/thumbnail
-            $destinationPath = public_path('edukasi/thumbnail');
-            if (!File::isDirectory($destinationPath)) {
-                File::makeDirectory($destinationPath, 0755, true, true);
-            }
-            
-            $file->move($destinationPath, $filename);
-            $data['gambar_thumbnail'] = 'edukasi/thumbnail/' . $filename;
+            $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
+            $data['gambar_thumbnail'] = $request->file('gambar_thumbnail')
+                ->store('edukasi/thumbnail', $disk);
         }
 
         ArtikelEdukasi::create($data);
@@ -96,26 +88,20 @@ class EdukasiController extends Controller
         $data = $request->only(['judul', 'kategori', 'konten_html']);
 
         if ($request->hasFile('gambar_thumbnail')) {
-            $file = $request->file('gambar_thumbnail');
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            
-            // Simpan ke public/edukasi/thumbnail
-            $destinationPath = public_path('edukasi/thumbnail');
-            if (!File::isDirectory($destinationPath)) {
-                File::makeDirectory($destinationPath, 0755, true, true);
-            }
-            
-            $file->move($destinationPath, $filename);
-            
+            $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
+
             // Hapus gambar lama jika ada
             if ($artikel->gambar_thumbnail) {
-                $oldPath = public_path($artikel->gambar_thumbnail);
-                if (File::exists($oldPath)) {
-                    File::delete($oldPath);
+                // Cek apakah path lama (public/edukasi/thumbnail) atau baru (storage)
+                if (str_starts_with($artikel->gambar_thumbnail, 'edukasi/thumbnail/')) {
+                    @unlink(public_path($artikel->gambar_thumbnail));
+                } else {
+                    Storage::disk($disk)->delete($artikel->gambar_thumbnail);
                 }
             }
 
-            $data['gambar_thumbnail'] = 'edukasi/thumbnail/' . $filename;
+            $data['gambar_thumbnail'] = $request->file('gambar_thumbnail')
+                ->store('edukasi/thumbnail', $disk);
         }
 
         $artikel->update($data);
@@ -133,9 +119,11 @@ class EdukasiController extends Controller
 
         // Hapus file gambar thumbnail
         if ($artikel->gambar_thumbnail) {
-            $imagePath = public_path($artikel->gambar_thumbnail);
-            if (File::exists($imagePath)) {
-                File::delete($imagePath);
+            $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
+            if (str_starts_with($artikel->gambar_thumbnail, 'edukasi/thumbnail/')) {
+                @unlink(public_path($artikel->gambar_thumbnail));
+            } else {
+                Storage::disk($disk)->delete($artikel->gambar_thumbnail);
             }
         }
 

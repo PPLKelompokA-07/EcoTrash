@@ -79,7 +79,7 @@
             <div>
                 <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3 px-2">Foto dari Pelapor</p>
                 <div class="w-full h-48 rounded-3xl overflow-hidden border border-outline shadow-sm">
-                    <img src="{{ asset('storage/' . $laporan->foto_laporan_warga) }}" alt="Foto Bukti" class="w-full h-full object-cover">
+                    <img src="{{ $laporan->foto_laporan_warga_url }}" alt="Foto Bukti" class="w-full h-full object-cover">
                 </div>
             </div>
 

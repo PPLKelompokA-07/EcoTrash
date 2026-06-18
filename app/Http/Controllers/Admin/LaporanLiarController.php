@@ -59,7 +59,7 @@ class LaporanLiarController extends Controller
                 'lat' => (float) $l->lat,
                 'lng' => (float) $l->lng,
                 'deskripsi' => $l->deskripsi,
-                'foto' => $l->foto_laporan_warga ? asset('storage/' . $l->foto_laporan_warga) : null,
+                'foto' => $l->foto_laporan_warga_url,
                 'status' => $l->status,
                 'petugas' => $l->petugas->nama ?? null,
                 'alasanPenolakan' => $l->alasan_penolakan,

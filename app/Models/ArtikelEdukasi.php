@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 
 class ArtikelEdukasi extends Model
 {
@@ -20,6 +21,21 @@ class ArtikelEdukasi extends Model
         'konten_html',
         'penulis_admin_id',
     ];
+
+    /**
+     * URL thumbnail kompatibel dengan local & cloud storage.
+     * Mendukung path lama (public/edukasi/thumbnail/...) dan path baru (Storage).
+     */
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if (!$this->gambar_thumbnail) return null;
+        // Jika path lama (dimulai dengan 'edukasi/thumbnail'), gunakan asset()
+        if (str_starts_with($this->gambar_thumbnail, 'edukasi/thumbnail/')) {
+            return asset($this->gambar_thumbnail);
+        }
+        // Path baru dari Storage disk
+        return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->gambar_thumbnail);
+    }
 
     public function penulisAdmin(): BelongsTo
     {

@@ -120,7 +120,8 @@ class TugasController extends Controller
 
             if ($statusBaru === 'selesai') {
                 // Upload foto bukti
-                $uploadedFilePath = $request->file('foto_bukti')->store('buktipesanan', 'public');
+                $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
+                $uploadedFilePath = $request->file('foto_bukti')->store('buktipesanan', $disk);
 
                 // Kalkulasi koin dari pengaturan sistem
                 $pengaturan = PengaturanSistem::first();
@@ -195,7 +196,8 @@ class TugasController extends Controller
         try {
             // Upload foto kendala jika ada
             if ($request->hasFile('foto_kendala')) {
-                $uploadedFilePath = $request->file('foto_kendala')->store('fotokendala', 'public');
+                $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
+                $uploadedFilePath = $request->file('foto_kendala')->store('fotokendala', $disk);
             }
 
             if ($tipeKendala === 'terkunci') {

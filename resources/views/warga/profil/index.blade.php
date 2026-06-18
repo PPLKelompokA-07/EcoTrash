@@ -46,7 +46,7 @@
     deleteAddressId: null,
     primaryId: {{ $primaryAddressId ?? 'null' }},
     editingAddress: { id: null, title: '', komplek_id: '', blok_nomor_rumah: '', detail_patokan: '' },
-    profileImage: '{{ $user->foto_profil ? asset('storage/' . $user->foto_profil) : '' }}',
+    profileImage: '{{ $user->foto_profil_url ?? '' }}',
     handleImageUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -279,23 +279,33 @@
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0 scale-95 translate-y-4"
              x-transition:enter-end="opacity-100 scale-100 translate-y-0">
-            <h3 class="font-bold text-lg text-on-surface mb-2">Ubah Kata Sandi</h3>
-            <div>
-                <label class="text-xs font-bold text-on-surface-variant block mb-1">Kata Sandi Lama</label>
-                <input type="password" class="w-full border border-outline rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" placeholder="Masukkan sandi lama">
-            </div>
-            <div>
-                <label class="text-xs font-bold text-on-surface-variant block mb-1">Kata Sandi Baru</label>
-                <input type="password" class="w-full border border-outline rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" placeholder="Masukkan sandi baru">
-            </div>
-            <div>
-                <label class="text-xs font-bold text-on-surface-variant block mb-1">Ulangi Kata Sandi Baru</label>
-                <input type="password" class="w-full border border-outline rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" placeholder="Ketik ulang sandi baru">
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button @click="showSecurityModal = false" class="flex-1 py-3 text-sm font-bold text-on-surface-variant bg-surface-variant rounded-xl">Batal</button>
-                <button @click="showSecurityModal = false" class="flex-1 py-3 text-sm font-bold text-white bg-primary hover:bg-primary-dark rounded-xl shadow-md">Simpan Sandi</button>
-            </div>
+            <form action="{{ route('warga.profil.password') }}" method="POST">
+                @csrf
+                @method('PUT')
+                <h3 class="font-bold text-lg text-on-surface mb-4">Ubah Kata Sandi</h3>
+                @if($errors->has('password_lama'))
+                <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-medium flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px]">error</span>
+                    {{ $errors->first('password_lama') }}
+                </div>
+                @endif
+                <div>
+                    <label class="text-xs font-bold text-on-surface-variant block mb-1">Kata Sandi Lama</label>
+                    <input type="password" name="password_lama" class="w-full border border-outline rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" placeholder="Masukkan sandi lama" required>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-on-surface-variant block mb-1">Kata Sandi Baru</label>
+                    <input type="password" name="password" class="w-full border border-outline rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" placeholder="Minimal 8 karakter" required minlength="8">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-on-surface-variant block mb-1">Ulangi Kata Sandi Baru</label>
+                    <input type="password" name="password_confirmation" class="w-full border border-outline rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" placeholder="Ketik ulang sandi baru" required>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button type="button" @click="showSecurityModal = false" class="flex-1 py-3 text-sm font-bold text-on-surface-variant bg-surface-variant rounded-xl">Batal</button>
+                    <button type="submit" class="flex-1 py-3 text-sm font-bold text-white bg-primary hover:bg-primary-dark rounded-xl shadow-md">Simpan Sandi</button>
+                </div>
+            </form>
         </div>
     </div>
 

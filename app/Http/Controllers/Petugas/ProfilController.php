@@ -31,20 +31,22 @@ class ProfilController extends Controller
 
         $petugas = Auth::user();
 
+        $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
+
         // Hapus foto lama jika ada
-        if ($petugas->foto_profil && Storage::disk('public')->exists($petugas->foto_profil)) {
-            Storage::disk('public')->delete($petugas->foto_profil);
+        if ($petugas->foto_profil && Storage::disk($disk)->exists($petugas->foto_profil)) {
+            Storage::disk($disk)->delete($petugas->foto_profil);
         }
 
         // Simpan foto baru
-        $path = $request->file('foto')->store('foto_profil', 'public');
+        $path = $request->file('foto')->store('foto_profil', $disk);
         
         $petugas->update([
             'foto_profil' => $path
         ]);
 
         return response()->json([
-            'url' => asset('storage/' . $path)
+            'url' => Storage::disk($disk)->url($path)
         ]);
     }
 

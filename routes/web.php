@@ -59,6 +59,7 @@ Route::prefix('warga')->name('warga.')->middleware(['auth', 'role:warga', 'addre
     // Profil & Alamat (MODUL 2)
     Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
     Route::put('/profil/update', [ProfilController::class, 'updateProfile'])->name('profil.update');
+    Route::put('/profil/password', [ProfilController::class, 'changePassword'])->name('profil.password');
     Route::post('/profil/upload-foto', [ProfilController::class, 'uploadFoto'])->name('profil.uploadFoto');
     Route::post('/profil/alamat', [ProfilController::class, 'storeAlamat'])->name('profil.alamat.store');
     Route::put('/profil/alamat/{id}', [ProfilController::class, 'updateAlamat'])->name('profil.alamat.update');

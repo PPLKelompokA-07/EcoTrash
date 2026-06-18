@@ -65,7 +65,7 @@
                             <td class="py-3 px-4 text-on-surface-variant truncate max-w-[150px]">{{ $laporan->alamat_lokasi ?? $laporan->lat . ', ' . $laporan->lng }}</td>
                             <td class="py-3 px-4">
                                 @if($laporan->foto_laporan_warga)
-                                    <img src="{{ asset('storage/' . $laporan->foto_laporan_warga) }}" alt="Foto Laporan" class="w-10 h-10 object-cover rounded border border-outline cursor-pointer" @click="openModal({{ $laporan->id }})">
+                                    <img src="{{ $laporan->foto_laporan_warga_url }}" alt="Foto Laporan" class="w-10 h-10 object-cover rounded border border-outline cursor-pointer" @click="openModal({{ $laporan->id }})">
                                 @else
                                     <div class="w-10 h-10 bg-surface-variant rounded flex items-center justify-center text-on-surface-variant">
                                         <span class="material-symbols-outlined text-[20px]">image</span>
