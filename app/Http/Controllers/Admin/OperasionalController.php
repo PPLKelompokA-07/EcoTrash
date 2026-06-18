@@ -38,13 +38,12 @@ class OperasionalController extends Controller
 
         // Group by komplek
         $pesananByKomplek = $pesanans->groupBy('komplek_id')->map(function ($group) {
+            $petugasIds = $group->pluck('petugas_id')->filter()->unique();
             return [
                 'komplek'  => $group->first()->komplek,
                 'pesanans' => $group,
-                // Ambil petugas yang ditugaskan di komplek ini
-                'petugas'  => $group->first()->komplek
-                    ->petugasUsers()
-                    ->get(),
+                // Ambil petugas berdasarkan pesanan di hari ini
+                'petugas'  => User::whereIn('id', $petugasIds)->get(),
             ];
         });
 
@@ -77,12 +76,6 @@ class OperasionalController extends Controller
             ->whereDate('tanggal_penjemputan', $request->tanggal)
             ->whereIn('status', ['menunggu_pembayaran', 'menunggu_pembayaran_selisih', 'menunggu'])
             ->update(['petugas_id' => $request->petugas_id]);
-
-        // Attach ke pivot table petugas_komplek jika belum ada
-        $komplek = Komplek::find($request->komplek_id);
-        if (!$komplek->petugasUsers->contains($request->petugas_id)) {
-            $komplek->petugasUsers()->attach($request->petugas_id);
-        }
 
         return response()->json(['message' => 'Berhasil menugaskan petugas untuk komplek ini.']);
     }

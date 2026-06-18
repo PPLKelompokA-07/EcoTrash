@@ -43,5 +43,7 @@
     </div>
 
     @stack('scripts')
+    
+    <x-camera-modal />
 </body>
 </html>

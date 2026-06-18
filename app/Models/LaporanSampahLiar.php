@@ -44,6 +44,9 @@ class LaporanSampahLiar extends Model
     public function getFotoLaporanWargaUrlAttribute(): ?string
     {
         if (!$this->foto_laporan_warga) return null;
+        if (str_starts_with($this->foto_laporan_warga, 'db/')) {
+            return url('images/' . $this->foto_laporan_warga);
+        }
         return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->foto_laporan_warga);
     }
 
@@ -53,6 +56,9 @@ class LaporanSampahLiar extends Model
     public function getFotoBuktiSelesaiPetugasUrlAttribute(): ?string
     {
         if (!$this->foto_bukti_selesai_petugas) return null;
+        if (str_starts_with($this->foto_bukti_selesai_petugas, 'db/')) {
+            return url('images/' . $this->foto_bukti_selesai_petugas);
+        }
         return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->foto_bukti_selesai_petugas);
     }
 

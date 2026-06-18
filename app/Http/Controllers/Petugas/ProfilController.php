@@ -26,27 +26,40 @@ class ProfilController extends Controller
     public function uploadFoto(Request $request): JsonResponse
     {
         $request->validate([
-            'foto' => ['required', 'image', 'max:2048']
+            'foto' => ['required', 'image', 'max:10240']
         ]);
 
         $petugas = Auth::user();
 
-        $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
-
-        // Hapus foto lama jika ada
-        if ($petugas->foto_profil && Storage::disk($disk)->exists($petugas->foto_profil)) {
-            Storage::disk($disk)->delete($petugas->foto_profil);
+        // Hapus foto lama dari DatabaseFile jika ada
+        if ($petugas->foto_profil && str_starts_with($petugas->foto_profil, 'db/')) {
+            $oldFilename = str_replace('db/', '', $petugas->foto_profil);
+            \App\Models\DatabaseFile::where('filename', $oldFilename)->delete();
         }
 
         // Simpan foto baru
-        $path = $request->file('foto')->store('foto_profil', $disk);
+        $foto = $request->file('foto');
+        $filename = uniqid('profil_petugas_') . '.jpg';
+
+        $imageManager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+        $compressedImage = $imageManager->read($foto->getRealPath())
+                                        ->scaleDown(width: 800)
+                                        ->toJpeg(75);
+
+        \App\Models\DatabaseFile::create([
+            'filename' => $filename,
+            'mime_type' => 'image/jpeg',
+            'data' => $compressedImage->toString(),
+        ]);
+
+        $path = 'db/' . $filename;
         
         $petugas->update([
             'foto_profil' => $path
         ]);
 
         return response()->json([
-            'url' => Storage::disk($disk)->url($path)
+            'url' => url('images/' . $path)
         ]);
     }
 
@@ -59,10 +72,45 @@ class ProfilController extends Controller
             'alasan' => ['required', 'string', 'min:5']
         ]);
 
-        Auth::user()->update([
+        $petugas = Auth::user();
+
+        $petugas->update([
             'status_kehadiran' => 'berhalangan',
             'alasan_berhalangan' => $request->alasan,
+            'berhalangan_until' => now()->endOfDay(),
         ]);
+
+        // Auto-Unassign Pesanan Pengangkutan
+        $activePesanan = \App\Models\PesananPengangkutan::where('petugas_id', $petugas->id)
+            ->whereNotIn('status', ['selesai', 'dibatalkan', 'gagal_pickup'])
+            ->get();
+        
+        $countPesanan = $activePesanan->count();
+        if ($countPesanan > 0) {
+            \App\Models\PesananPengangkutan::whereIn('id', $activePesanan->pluck('id'))
+                ->update([
+                    'petugas_id' => null,
+                    'status' => 'menunggu'
+                ]);
+        }
+
+
+        // Beritahu Admin
+        $admins = \App\Models\User::where('role', 'admin')->pluck('id')->toArray();
+        if (!empty($admins)) {
+            $pesanNotif = "Petugas {$petugas->nama} melaporkan berhalangan. Alasan: {$request->alasan}.";
+            
+            if ($countPesanan > 0) {
+                $pesanNotif .= " Terdapat {$countPesanan} Pesanan yang status assign-nya telah dibatalkan dan dikembalikan ke antrean.";
+            }
+
+            \App\Services\NotificationService::sendToMany(
+                $admins,
+                'Petugas Berhalangan',
+                $pesanNotif,
+                'warning'
+            );
+        }
 
         return response()->json([
             'message' => 'Status kehadiran berhasil diperbarui menjadi berhalangan.'
@@ -77,6 +125,7 @@ class ProfilController extends Controller
         Auth::user()->update([
             'status_kehadiran' => 'aktif',
             'alasan_berhalangan' => null,
+            'berhalangan_until' => null,
         ]);
 
         return response()->json([

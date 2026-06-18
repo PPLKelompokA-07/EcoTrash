@@ -22,6 +22,8 @@
         'total_harga_akhir' => $p->total_harga_akhir,
         'harga_awal' => $p->harga_awal,
         'koin_digunakan' => $p->koin_digunakan,
+        'foto_kendala' => $p->foto_kendala_url,
+        'foto_bukti_selesai' => $p->foto_bukti_selesai_url,
         'tanggal_penjemputan' => $p->tanggal_penjemputan ? $p->tanggal_penjemputan->translatedFormat('l, d M Y') : '-',
         'riwayat' => $p->riwayatStatus->map(fn($r) => [
             'status' => $r->status,
@@ -35,7 +37,16 @@
         'deskripsi' => $l->deskripsi,
         'alamat_lokasi' => $l->alamat_lokasi,
         'foto' => $l->foto_laporan_warga_url ?? 'https://images.unsplash.com/photo-1605333396825-724bc297341e?q=80&w=800&auto=format&fit=crop',
+        'foto_bukti_selesai' => $l->foto_bukti_selesai_petugas_url,
         'created_at' => $l->created_at ? $l->created_at->translatedFormat('d M Y, H:i') : '-',
+        'riwayat' => collect([
+            ['status' => 'menunggu', 'keterangan' => 'Laporan dibuat.', 'waktu' => $l->created_at ? $l->created_at->translatedFormat('d M Y, H:i') : '-'],
+            in_array($l->status, ['disetujui', 'sedang_dibersihkan', 'ditunda', 'selesai']) ? ['status' => 'disetujui', 'keterangan' => 'Laporan disetujui oleh admin.', 'waktu' => '-'] : null,
+            in_array($l->status, ['sedang_dibersihkan', 'ditunda', 'selesai']) ? ['status' => 'sedang_dibersihkan', 'keterangan' => 'Petugas ditugaskan untuk membersihkan lokasi.', 'waktu' => '-'] : null,
+            $l->status === 'ditunda' ? ['status' => 'ditunda', 'keterangan' => 'Pembersihan ditunda: ' . $l->alasan_ditunda, 'waktu' => '-'] : null,
+            $l->status === 'selesai' ? ['status' => 'selesai', 'keterangan' => 'Pembersihan selesai.', 'waktu' => '-'] : null,
+            $l->status === 'ditolak' ? ['status' => 'ditolak', 'keterangan' => 'Laporan ditolak: ' . $l->alasan_penolakan, 'waktu' => '-'] : null,
+        ])->filter()->values(),
     ])),
     openPesanan(id) {
         this.selectedPesanan = this.pesananData.find(p => p.id === id);
@@ -201,18 +212,57 @@
                             <template x-for="(step, index) in selectedPesanan.riwayat" :key="index">
                                 <div class="relative flex items-start gap-4 pb-6">
                                     <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white shrink-0 shadow-sm z-10"
-                                         :class="index === selectedPesanan.riwayat.length - 1 ? 'bg-primary text-white' : 'bg-green-500 text-white'">
-                                        <span class="material-symbols-outlined text-[16px]" x-text="index === selectedPesanan.riwayat.length - 1 ? (step.status === 'selesai' ? 'check_circle' : 'radio_button_checked') : 'check'"></span>
+                                         :class="{
+                                             'bg-primary text-white': index === selectedPesanan.riwayat.length - 1 && !['gagal_pickup', 'hold_kapasitas'].includes(step.status),
+                                             'bg-red-500 text-white': step.status === 'gagal_pickup' || (step.status === 'menunggu' && step.keterangan && step.keterangan.toLowerCase().includes('gagal pickup')),
+                                             'bg-orange-500 text-white': step.status === 'hold_kapasitas',
+                                             'bg-green-500 text-white': step.status === 'selesai' || (index < selectedPesanan.riwayat.length - 1 && !['gagal_pickup', 'hold_kapasitas'].includes(step.status) && !(step.status === 'menunggu' && step.keterangan && step.keterangan.toLowerCase().includes('gagal pickup')))
+                                         }">
+                                        <span class="material-symbols-outlined text-[16px]" x-text="index === selectedPesanan.riwayat.length - 1 ? (step.status === 'selesai' ? 'check_circle' : (step.status === 'gagal_pickup' || (step.status === 'menunggu' && step.keterangan && step.keterangan.toLowerCase().includes('gagal pickup')) ? 'cancel' : (step.status === 'hold_kapasitas' ? 'warning' : 'radio_button_checked'))) : 'check'"></span>
                                     </div>
                                     <div class="flex-1 p-4 rounded-xl border shadow-sm"
-                                         :class="index === selectedPesanan.riwayat.length - 1 ? 'border-primary bg-primary/5' : 'border-outline bg-surface'">
-                                        <h4 class="font-bold text-sm" :class="index === selectedPesanan.riwayat.length - 1 ? 'text-primary' : 'text-on-surface'" x-text="statusLabel(step.status)"></h4>
+                                         :class="{
+                                             'border-primary bg-primary/5': index === selectedPesanan.riwayat.length - 1 && !['gagal_pickup', 'hold_kapasitas'].includes(step.status),
+                                             'border-red-500 bg-red-50': step.status === 'gagal_pickup' || (step.status === 'menunggu' && step.keterangan && step.keterangan.toLowerCase().includes('gagal pickup')),
+                                             'border-orange-500 bg-orange-50': step.status === 'hold_kapasitas',
+                                             'border-outline bg-surface': step.status !== 'gagal_pickup' && step.status !== 'hold_kapasitas' && !(step.status === 'menunggu' && step.keterangan && step.keterangan.toLowerCase().includes('gagal pickup')) && index < selectedPesanan.riwayat.length - 1
+                                         }">
+                                        <h4 class="font-bold text-sm" 
+                                            :class="{
+                                                'text-primary': index === selectedPesanan.riwayat.length - 1 && !['gagal_pickup', 'hold_kapasitas'].includes(step.status),
+                                                'text-red-700': step.status === 'gagal_pickup' || (step.status === 'menunggu' && step.keterangan && step.keterangan.toLowerCase().includes('gagal pickup')),
+                                                'text-orange-700': step.status === 'hold_kapasitas',
+                                                'text-on-surface': step.status !== 'gagal_pickup' && step.status !== 'hold_kapasitas' && !(step.status === 'menunggu' && step.keterangan && step.keterangan.toLowerCase().includes('gagal pickup')) && index < selectedPesanan.riwayat.length - 1
+                                            }" 
+                                            x-text="statusLabel(step.status === 'menunggu' && step.keterangan && step.keterangan.toLowerCase().includes('gagal pickup') ? 'gagal_pickup' : step.status)"></h4>
                                         <p class="text-xs text-on-surface-variant mt-1" x-text="step.keterangan"></p>
                                         <p class="text-[10px] text-on-surface-variant mt-2 font-medium" x-text="step.waktu"></p>
+
+                                        <!-- Menampilkan foto bukti selesai -->
+                                        <template x-if="step.status === 'selesai' && selectedPesanan.foto_bukti_selesai">
+                                            <div class="mt-3 rounded-lg overflow-hidden border-2 border-green-400">
+                                                <img :src="selectedPesanan.foto_bukti_selesai" class="w-full h-32 object-cover" alt="Foto Bukti Selesai">
+                                            </div>
+                                        </template>
+
+                                        <!-- Menampilkan foto kendala (gagal pickup / hold kapasitas) -->
+                                        <template x-if="(step.status === 'hold_kapasitas' || step.status === 'gagal_pickup' || (step.status === 'menunggu' && step.keterangan && step.keterangan.toLowerCase().includes('gagal pickup'))) && selectedPesanan.foto_kendala">
+                                            <div class="mt-3 rounded-lg overflow-hidden border-2 opacity-90"
+                                                 :class="{
+                                                     'border-red-400': step.status === 'gagal_pickup' || (step.status === 'menunggu' && step.keterangan && step.keterangan.toLowerCase().includes('gagal pickup')),
+                                                     'border-orange-400': step.status === 'hold_kapasitas'
+                                                 }">
+                                                <img :src="selectedPesanan.foto_kendala" class="w-full h-32 object-cover" alt="Foto Kendala">
+                                            </div>
+                                        </template>
                                     </div>
                                 </div>
                             </template>
                         </div>
+                        
+                        <button @click="showTrackingModal = false" class="w-full bg-surface border border-outline text-on-surface font-bold py-4 rounded-xl hover:bg-surface-variant transition-colors mt-6 md:hidden">
+                            Tutup
+                        </button>
                     </div>
                 </template>
             </div>
@@ -240,7 +290,7 @@
             </button>
             
             <template x-if="selectedLaporan">
-                <div>
+                <div class="flex flex-col h-full overflow-hidden">
                     <div class="h-48 md:h-64 relative bg-surface-dim shrink-0">
                         <img :src="selectedLaporan.foto" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -257,7 +307,7 @@
                         </div>
                     </div>
 
-                    <div class="p-6 md:p-8 overflow-y-auto">
+                    <div class="p-6 md:p-8 overflow-y-auto flex-1">
                         <div class="flex items-start gap-3 mb-6 bg-surface p-4 rounded-2xl border border-outline">
                             <span class="material-symbols-outlined text-primary mt-0.5">location_on</span>
                             <div>
@@ -269,6 +319,51 @@
                         <div class="mb-6">
                             <p class="font-bold text-on-surface text-sm mb-2">Deskripsi Pelapor</p>
                             <p class="text-sm text-on-surface-variant leading-relaxed" x-text="selectedLaporan.deskripsi"></p>
+                        </div>
+
+                        <!-- Progress Tracker Laporan (sama seperti Pesanan) -->
+                        <div class="mt-8 mb-6">
+                            <h4 class="font-bold text-on-surface mb-4">Lacak Progres Laporan</h4>
+                            <div class="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-outline before:to-transparent">
+                                <template x-for="(step, index) in selectedLaporan.riwayat" :key="index">
+                                    <div class="relative flex items-start gap-4 pb-6">
+                                        <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white shrink-0 shadow-sm z-10"
+                                             :class="{
+                                                 'bg-primary text-white': index === selectedLaporan.riwayat.length - 1 && step.status !== 'ditolak' && step.status !== 'ditunda',
+                                                 'bg-red-500 text-white': step.status === 'ditolak',
+                                                 'bg-orange-500 text-white': step.status === 'ditunda',
+                                                 'bg-green-500 text-white': step.status === 'selesai' || (index < selectedLaporan.riwayat.length - 1 && step.status !== 'ditolak' && step.status !== 'ditunda')
+                                             }">
+                                            <span class="material-symbols-outlined text-[16px]" x-text="index === selectedLaporan.riwayat.length - 1 ? (step.status === 'selesai' ? 'check_circle' : (step.status === 'ditolak' ? 'cancel' : (step.status === 'ditunda' ? 'warning' : 'radio_button_checked'))) : 'check'"></span>
+                                        </div>
+                                        <div class="flex-1 p-4 rounded-xl border shadow-sm"
+                                             :class="{
+                                                 'border-primary bg-primary/5': index === selectedLaporan.riwayat.length - 1 && step.status !== 'ditolak' && step.status !== 'ditunda',
+                                                 'border-red-500 bg-red-50': step.status === 'ditolak',
+                                                 'border-orange-500 bg-orange-50': step.status === 'ditunda',
+                                                 'border-outline bg-surface': step.status !== 'ditolak' && step.status !== 'ditunda' && index < selectedLaporan.riwayat.length - 1
+                                             }">
+                                            <h4 class="font-bold text-sm" 
+                                                :class="{
+                                                    'text-primary': index === selectedLaporan.riwayat.length - 1 && step.status !== 'ditolak' && step.status !== 'ditunda',
+                                                    'text-red-700': step.status === 'ditolak',
+                                                    'text-orange-700': step.status === 'ditunda',
+                                                    'text-on-surface': step.status !== 'ditolak' && step.status !== 'ditunda' && index < selectedLaporan.riwayat.length - 1
+                                                }" 
+                                                x-text="statusLabel(step.status)"></h4>
+                                            <p class="text-xs text-on-surface-variant mt-1" x-text="step.keterangan"></p>
+                                            <p class="text-[10px] text-on-surface-variant mt-2 font-medium" x-text="step.waktu" x-show="step.waktu !== '-'"></p>
+
+                                            <!-- Menampilkan foto bukti selesai -->
+                                            <template x-if="step.status === 'selesai' && selectedLaporan.foto_bukti_selesai">
+                                                <div class="mt-3 rounded-lg overflow-hidden border-2 border-green-400">
+                                                    <img :src="selectedLaporan.foto_bukti_selesai" class="w-full h-32 object-cover" alt="Foto Bukti Selesai Petugas">
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
 
                         <div class="border-t border-outline pt-4">

@@ -16,7 +16,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'nama', 'email', 'no_telepon', 'password', 'role',
-        'saldo_koin', 'foto_profil', 'status_kehadiran', 'alasan_berhalangan',
+        'saldo_koin', 'foto_profil', 'status_kehadiran', 'alasan_berhalangan', 'berhalangan_until',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -26,6 +26,7 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'saldo_koin' => 'integer',
+            'berhalangan_until' => 'datetime',
         ];
     }
 
@@ -41,6 +42,9 @@ class User extends Authenticatable
     public function getFotoProfilUrlAttribute(): ?string
     {
         if (!$this->foto_profil) return null;
+        if (str_starts_with($this->foto_profil, 'db/')) {
+            return url('images/' . $this->foto_profil);
+        }
         return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->foto_profil);
     }
 

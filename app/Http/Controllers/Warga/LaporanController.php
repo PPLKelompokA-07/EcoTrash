@@ -31,10 +31,21 @@ class LaporanController extends Controller
      */
     public function store(StoreLaporanRequest $request)
     {
-        $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
+        $foto = $request->file('foto');
+        $filename = uniqid('laporan_') . '.jpg';
 
-        // Upload foto ke storage
-        $fotoPath = $request->file('foto')->store('laporan_warga', $disk);
+        $imageManager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+        $compressedImage = $imageManager->read($foto->getRealPath())
+                                        ->scaleDown(width: 1200)
+                                        ->toJpeg(75);
+
+        \App\Models\DatabaseFile::create([
+            'filename' => $filename,
+            'mime_type' => 'image/jpeg',
+            'data' => $compressedImage->toString(),
+        ]);
+
+        $fotoPath = 'db/' . $filename;
 
         // Insert ke database
         $laporan = LaporanSampahLiar::create([

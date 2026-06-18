@@ -62,6 +62,9 @@ class PesananPengangkutan extends Model
     public function getFotoBuktiSelesaiUrlAttribute(): ?string
     {
         if (!$this->foto_bukti_selesai) return null;
+        if (str_starts_with($this->foto_bukti_selesai, 'db/')) {
+            return url('images/' . $this->foto_bukti_selesai);
+        }
         return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->foto_bukti_selesai);
     }
 
@@ -71,6 +74,9 @@ class PesananPengangkutan extends Model
     public function getFotoKendalaUrlAttribute(): ?string
     {
         if (!$this->foto_kendala) return null;
+        if (str_starts_with($this->foto_kendala, 'db/')) {
+            return url('images/' . $this->foto_kendala);
+        }
         return Storage::disk(config('filesystems.default') === 'local' ? 'public' : config('filesystems.default'))->url($this->foto_kendala);
     }
 

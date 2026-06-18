@@ -81,15 +81,23 @@
 
 @section('header')
 <div class="flex items-center gap-3 w-full">
-    <button onclick="history.back()" class="p-2 -ml-2 rounded-full hover:bg-surface-variant text-on-surface-variant transition-colors">
+    <a href="{{ route('warga.edukasi.index') }}" class="p-2 -ml-2 rounded-full hover:bg-surface-variant text-on-surface-variant transition-colors">
         <span class="material-symbols-outlined">arrow_back</span>
-    </button>
+    </a>
     <span class="font-bold text-on-surface">Artikel Edukasi</span>
 </div>
 @endsection
 
 @section('content')
-<div class="bg-white md:bg-transparent min-h-full">
+<div class="bg-white md:bg-transparent min-h-full md:p-2">
+    <!-- Desktop Back Button -->
+    <div class="hidden md:flex mb-6">
+        <a href="{{ route('warga.edukasi.index') }}" class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary font-bold transition-colors bg-white px-4 py-2 rounded-full shadow-sm border border-outline hover:shadow-md">
+            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            Kembali ke Daftar Artikel
+        </a>
+    </div>
+
     <!-- Hero Image -->
     <div class="w-full h-64 md:h-96 relative md:rounded-3xl overflow-hidden mb-6 md:mb-10 shadow-sm">
         <img src="{{ $artikel->thumbnail_url }}" class="w-full h-full object-cover" alt="Thumbnail">

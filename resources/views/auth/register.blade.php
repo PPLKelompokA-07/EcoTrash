@@ -87,9 +87,14 @@
                 <!-- Password -->
                 <div class="flex flex-col gap-1.5">
                     <label for="password" class="block font-medium text-sm text-on-surface">Password</label>
-                    <input id="password" type="password" name="password" required autocomplete="new-password"
-                        class="block w-full rounded-lg border-outline-variant bg-white/50 px-4 py-2.5 text-on-surface shadow-sm focus:border-primary focus:ring focus:ring-primary/20 transition-colors @error('password') border-red-500 @enderror"
-                        placeholder="Buat password minimal 8 karakter">
+                    <div class="relative">
+                        <input id="password" type="password" name="password" required autocomplete="new-password"
+                            class="block w-full rounded-lg border-outline-variant bg-white/50 px-4 py-2.5 pr-12 text-on-surface shadow-sm focus:border-primary focus:ring focus:ring-primary/20 transition-colors @error('password') border-red-500 @enderror"
+                            placeholder="Buat password minimal 8 karakter">
+                        <button type="button" onclick="togglePassword('password', this)" class="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
+                            <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+                        </button>
+                    </div>
                     @error('password')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -98,9 +103,14 @@
                 <!-- Confirm Password -->
                 <div class="flex flex-col gap-1.5">
                     <label for="password_confirmation" class="block font-medium text-sm text-on-surface">Konfirmasi Password</label>
-                    <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
-                        class="block w-full rounded-lg border-outline-variant bg-white/50 px-4 py-2.5 text-on-surface shadow-sm focus:border-primary focus:ring focus:ring-primary/20 transition-colors"
-                        placeholder="Ulangi password Anda">
+                    <div class="relative">
+                        <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
+                            class="block w-full rounded-lg border-outline-variant bg-white/50 px-4 py-2.5 pr-12 text-on-surface shadow-sm focus:border-primary focus:ring focus:ring-primary/20 transition-colors"
+                            placeholder="Ulangi password Anda">
+                        <button type="button" onclick="togglePassword('password_confirmation', this)" class="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
+                            <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="mt-4 flex flex-col gap-4">
@@ -116,5 +126,20 @@
             </form>
         </div>
     </div>
+
+    <script>
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('.material-symbols-outlined');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        }
+    </script>
 </body>
 </html>

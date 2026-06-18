@@ -87,13 +87,13 @@
             <div x-show="status === 'sedang_dibersihkan'" x-transition.opacity style="display: none;">
                 <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3 px-2">Foto Hasil Pembersihan</p>
                 
-                <label class="block w-full bg-surface border-2 border-dashed border-outline rounded-3xl p-8 text-center cursor-pointer hover:bg-primary/5 hover:border-primary/50 transition-colors active:scale-[0.98] overflow-hidden relative" :class="imagePreview ? 'p-0 border-solid' : ''">
+                <button type="button" @click="$dispatch('open-camera', { inputId: 'foto_hasil_input' })" class="block w-full bg-surface border-2 border-dashed border-outline rounded-3xl p-8 text-center cursor-pointer hover:bg-primary/5 hover:border-primary/50 transition-colors active:scale-[0.98] overflow-hidden relative" :class="imagePreview ? 'p-0 border-solid' : ''">
                     <div x-show="!imagePreview">
                         <div class="w-16 h-16 rounded-full bg-primary/20 text-primary flex items-center justify-center mx-auto mb-3 shadow-sm">
                             <span class="material-symbols-outlined text-[32px]">photo_camera</span>
                         </div>
                         <p class="font-bold text-on-surface text-sm mb-1">Ambil Foto Hasil</p>
-                        <p class="text-[10px] text-on-surface-variant">Klik untuk buka kamera</p>
+                        <p class="text-[10px] text-on-surface-variant">Klik untuk buka kamera custom</p>
                     </div>
                     <div x-show="imagePreview" style="display: none;" class="w-full h-48 relative">
                         <img :src="imagePreview" class="w-full h-full object-cover">
@@ -103,8 +103,8 @@
                             </div>
                         </div>
                     </div>
-                    <input type="file" accept="image/*" capture="environment" class="hidden" @change="if($event.target.files.length) { imagePreview = URL.createObjectURL($event.target.files[0]); fotoFile = $event.target.files[0]; }">
-                </label>
+                </button>
+                <input type="file" id="foto_hasil_input" accept="image/*" class="hidden" @change="if($event.target.files.length) { imagePreview = URL.createObjectURL($event.target.files[0]); fotoFile = $event.target.files[0]; }">
             </div>
 
             <!-- Error Message -->
@@ -133,8 +133,8 @@
                                 isLoading = false;
                             });
                     " 
-                    :disabled="isLoading"
-                    :class="{ 'opacity-50 cursor-not-allowed': isLoading }"
+                    :disabled="isLoading || {{ $petugas->status_kehadiran === 'berhalangan' ? 'true' : 'false' }}"
+                    :class="{ 'opacity-50 cursor-not-allowed': isLoading || {{ $petugas->status_kehadiran === 'berhalangan' ? 'true' : 'false' }} }"
                     class="w-full bg-primary text-white font-bold py-4 mb-4 rounded-2xl transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2 active:scale-[0.98]">
                 <span x-show="!isLoading" class="material-symbols-outlined">cleaning_services</span>
                 <span x-show="!isLoading">Mulai Pembersihan</span>
@@ -149,12 +149,19 @@
 
             <!-- State 2: Selesai / Tunda -->
             <div x-show="status === 'sedang_dibersihkan'" class="flex gap-3 mb-4" style="display: none;">
-                <button @click="showModalTunda = true" :disabled="isLoading" class="flex-1 bg-surface-variant text-on-surface font-bold py-4 rounded-2xl transition-colors active:scale-[0.98]">Tunda</button>
-                <button @click="showConfirmSelesai = true" :disabled="isLoading" class="flex-[2] bg-primary text-white font-bold py-4 rounded-2xl transition-colors shadow-lg shadow-primary/30 flex items-center justify-center gap-2 active:scale-[0.98]">
+                <button @click="showModalTunda = true" :disabled="isLoading || {{ $petugas->status_kehadiran === 'berhalangan' ? 'true' : 'false' }}" :class="{ 'opacity-50 cursor-not-allowed': isLoading || {{ $petugas->status_kehadiran === 'berhalangan' ? 'true' : 'false' }} }" class="flex-1 bg-surface-variant text-on-surface font-bold py-4 rounded-2xl transition-colors active:scale-[0.98]">Tunda</button>
+                <button @click="showConfirmSelesai = true" :disabled="isLoading || {{ $petugas->status_kehadiran === 'berhalangan' ? 'true' : 'false' }}" :class="{ 'opacity-50 cursor-not-allowed': isLoading || {{ $petugas->status_kehadiran === 'berhalangan' ? 'true' : 'false' }} }" class="flex-[2] bg-primary text-white font-bold py-4 rounded-2xl transition-colors shadow-lg shadow-primary/30 flex items-center justify-center gap-2 active:scale-[0.98]">
                     <span class="material-symbols-outlined">check_circle</span>
                     Tandai Selesai
                 </button>
             </div>
+
+            @if($petugas->status_kehadiran === 'berhalangan')
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+                <span class="material-symbols-outlined text-red-600 text-[20px] mt-0.5">warning</span>
+                <p class="text-xs font-medium text-red-700">Anda sedang dalam status berhalangan hari ini. Anda tidak dapat melanjutkan pengerjaan tugas hingga status Anda aktif kembali.</p>
+            </div>
+            @endif
         </div>
 
         </div>

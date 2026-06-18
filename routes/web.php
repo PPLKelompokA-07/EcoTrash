@@ -19,6 +19,10 @@ use App\Http\Controllers\Petugas\TugasController;
 use App\Http\Controllers\Admin\PengaturanController as AdminPengaturanController;
 use App\Http\Controllers\Admin\ProfilController as AdminProfilController;
 use App\Http\Controllers\Admin\NotifikasiController as AdminNotifikasiController;
+use App\Http\Controllers\DatabaseFileController;
+
+// Database File Route
+Route::get('/images/db/{filename}', [DatabaseFileController::class, 'show'])->name('image.db');
 
 // Landing page
 Route::get('/', function () {
@@ -121,7 +125,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 });
 
 // --- Petugas Routes ---
-Route::prefix('petugas')->name('petugas.')->middleware(['auth', 'role:petugas'])->group(function () {
+Route::prefix('petugas')->name('petugas.')->middleware(['auth', 'role:petugas', 'check.petugas.status'])->group(function () {
     Route::get('/beranda', [TugasController::class, 'index'])->name('beranda');
 
     Route::get('/komplek/{id}/warga', [TugasController::class, 'showKomplekWarga'])->name('komplek.warga');

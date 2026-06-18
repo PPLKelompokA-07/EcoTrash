@@ -4,7 +4,12 @@
         <div class="flex items-center justify-between mb-6">
             <div>
                 <p class="text-sm font-bold text-on-surface-variant">Halo Petugas,</p>
-                <h1 class="text-2xl font-black text-on-surface">{{ $petugas->nama }}</h1>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-2xl font-black text-on-surface">{{ $petugas->nama }}</h1>
+                    @if($petugas->status_kehadiran === 'berhalangan')
+                        <span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-md border border-red-200">Sedang Berhalangan</span>
+                    @endif
+                </div>
             </div>
             <a href="{{ route('petugas.profil') }}" class="w-12 h-12 rounded-full bg-primary/20 text-primary flex items-center justify-center border-2 border-white shadow-sm shrink-0 overflow-hidden">
                 @if($petugas->foto_profil)
@@ -81,10 +86,15 @@
                             <img src="{{ $laporan->foto_laporan_warga_url ?? 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?auto=format&fit=crop&w=150&q=80' }}" alt="Sampah" class="w-full h-full object-cover">
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
+                            <div class="flex items-center flex-wrap gap-2 mb-1">
                                 <span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-md uppercase tracking-wider">
                                     Status: {{ str_replace('_', ' ', $laporan->status) }}
                                 </span>
+                                @if($petugas->status_kehadiran === 'berhalangan')
+                                    <span class="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                        Ditunda Sementara
+                                    </span>
+                                @endif
                             </div>
                             <h3 class="text-sm font-bold text-on-surface mb-1 line-clamp-2">{{ $laporan->deskripsi }}</h3>
                             <p class="text-xs font-medium text-on-surface-variant flex items-center gap-1">

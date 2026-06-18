@@ -1,26 +1,5 @@
 <x-petugas-layout>
     <div x-data="{ 
-        fotoPreview: '{{ $petugas->foto_profil_url ?? '' }}',
-        handleFile(e) {
-            if(e.target.files.length > 0){
-                const file = e.target.files[0];
-                this.fotoPreview = URL.createObjectURL(file);
-                
-                let fd = new FormData();
-                fd.append('foto', file);
-                
-                axios.post('{{ route('petugas.profil.uploadFoto') }}', fd, {
-                    headers: { 
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }).then(r => {
-                    window.location.reload();
-                }).catch(err => {
-                    alert(err.response?.data?.message || 'Gagal mengunggah foto');
-                });
-            }
-        },
         showDaruratModal: false, 
         daruratState: 'form', // 'form' -> 'success'
         showLogoutModal: false,
@@ -63,21 +42,12 @@
             
             <!-- Profile Card -->
             <div class="glass-card rounded-3xl p-6 text-center relative overflow-hidden">
-                <div class="relative w-24 h-24 mx-auto mb-4">
-                    <template x-if="!fotoPreview">
-                        <div class="w-full h-full rounded-full bg-primary/20 text-primary flex items-center justify-center border-4 border-white shadow-sm">
-                            <span class="material-symbols-outlined text-[48px]">account_circle</span>
-                        </div>
-                    </template>
-                    <template x-if="fotoPreview">
-                        <img :src="fotoPreview" class="w-full h-full rounded-full object-cover border-4 border-white shadow-sm">
-                    </template>
-                    
-                    <label for="foto_profil" class="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:bg-primary-dark transition-colors border-2 border-white">
-                        <span class="material-symbols-outlined text-[16px]">edit</span>
-                    </label>
-                    <input type="file" id="foto_profil" accept="image/*" class="hidden" @change="handleFile">
-                </div>
+                <x-profile-picture-upload 
+                    :initialPhoto="$petugas->foto_profil_url" 
+                    :uploadRoute="route('petugas.profil.uploadFoto')"
+                    :userInitial="strtoupper(substr($petugas->nama, 0, 1))"
+                />
+
                 <h2 class="text-xl font-black text-on-surface mb-1">{{ $petugas->nama }}</h2>
                 <p class="text-sm font-bold text-on-surface-variant">ID: PTG-{{ date('Y') }}-{{ str_pad($petugas->id, 3, '0', STR_PAD_LEFT) }}</p>
                 
@@ -247,4 +217,8 @@
         </div>
 
     </div>
+    
+    <!-- Image Source Modal Component -->
+    <x-image-source-modal />
+    
 </x-petugas-layout>

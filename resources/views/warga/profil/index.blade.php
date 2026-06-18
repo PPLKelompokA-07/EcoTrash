@@ -46,28 +46,6 @@
     deleteAddressId: null,
     primaryId: {{ $primaryAddressId ?? 'null' }},
     editingAddress: { id: null, title: '', komplek_id: '', blok_nomor_rumah: '', detail_patokan: '' },
-    profileImage: '{{ $user->foto_profil_url ?? '' }}',
-    handleImageUpload(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        this.profileImage = URL.createObjectURL(file);
-        
-        const formData = new FormData();
-        formData.append('foto', file);
-        
-        axios.post('{{ route('warga.profil.uploadFoto') }}', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-            }
-        })
-        .then(res => {
-            window.location.reload();
-        })
-        .catch(err => {
-            alert(err.response?.data?.message || 'Gagal mengunggah foto profil.');
-        });
-    },
     addresses: {{ json_encode($addressesJson) }},
     startEdit(addr) {
         this.editingAddress = {
@@ -86,19 +64,11 @@
         <div class="flex flex-col items-center justify-center pt-4 pb-8 md:py-0 relative">
             <div class="absolute top-0 w-full h-24 bg-gradient-to-b from-primary/10 to-transparent -mx-4 px-4 rounded-b-3xl md:hidden"></div>
             
-            <div class="w-28 h-28 md:w-36 md:h-36 rounded-full bg-surface flex items-center justify-center text-primary text-5xl md:text-6xl font-black mb-4 border-4 border-white shadow-lg relative z-10 overflow-hidden group">
-                <template x-if="!profileImage">
-                    <span>{{ strtoupper(substr($user->nama, 0, 1)) }}</span>
-                </template>
-                <template x-if="profileImage">
-                    <img :src="profileImage" alt="Profile" class="w-full h-full object-cover">
-                </template>
-                
-                <label for="profile_upload" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white">
-                    <span class="material-symbols-outlined text-[32px]">photo_camera</span>
-                </label>
-                <input type="file" id="profile_upload" accept="image/*" class="hidden" @change="handleImageUpload">
-            </div>
+            <x-profile-picture-upload 
+                :initialPhoto="$user->foto_profil_url" 
+                :uploadRoute="route('warga.profil.uploadFoto')"
+                :userInitial="strtoupper(substr($user->nama, 0, 1))"
+            />
 
             <h2 class="font-black text-2xl md:text-3xl text-on-surface z-10 text-center w-full break-words px-2">{{ $user->nama }}</h2>
             <p class="text-sm md:text-base font-medium text-on-surface-variant z-10 text-center w-full">{{ $user->email }}</p>
@@ -420,4 +390,7 @@
     </div>
 
 </div>
+    <!-- Image Source Modal Component -->
+    <x-image-source-modal />
+
 @endsection

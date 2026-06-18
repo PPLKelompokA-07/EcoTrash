@@ -65,6 +65,7 @@ class LaporanLiarController extends Controller
                 'alasanPenolakan' => $l->alasan_penolakan,
                 'alasanDitunda' => $l->alasan_ditunda,
                 'koinReward' => $l->koin_reward,
+                'foto_bukti_selesai' => $l->foto_bukti_selesai_petugas_url,
             ];
         });
 

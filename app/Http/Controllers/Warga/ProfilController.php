@@ -185,26 +185,40 @@ class ProfilController extends Controller
     public function uploadFoto(Request $request): JsonResponse
     {
         $request->validate([
-            'foto' => ['required', 'image', 'max:2048']
+            'foto' => ['required', 'image', 'max:10240']
         ]);
 
         $user = Auth::user();
-        $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
-
-        // Hapus foto lama jika ada
-        if ($user->foto_profil && Storage::disk($disk)->exists($user->foto_profil)) {
-            Storage::disk($disk)->delete($user->foto_profil);
+        
+        // Hapus foto lama dari DatabaseFile jika ada dan dimulai dengan 'db/'
+        if ($user->foto_profil && str_starts_with($user->foto_profil, 'db/')) {
+            $oldFilename = str_replace('db/', '', $user->foto_profil);
+            \App\Models\DatabaseFile::where('filename', $oldFilename)->delete();
         }
 
         // Simpan foto baru
-        $path = $request->file('foto')->store('foto_profil', $disk);
+        $foto = $request->file('foto');
+        $filename = uniqid('profil_warga_') . '.jpg';
+
+        $imageManager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+        $compressedImage = $imageManager->read($foto->getRealPath())
+                                        ->scaleDown(width: 800)
+                                        ->toJpeg(75);
+
+        \App\Models\DatabaseFile::create([
+            'filename' => $filename,
+            'mime_type' => 'image/jpeg',
+            'data' => $compressedImage->toString(),
+        ]);
+
+        $path = 'db/' . $filename;
 
         $user->update([
             'foto_profil' => $path
         ]);
 
         return response()->json([
-            'url' => Storage::disk($disk)->url($path)
+            'url' => url('images/' . $path)
         ]);
     }
 }

@@ -113,6 +113,14 @@ class PesananController extends Controller
         $count = PesananPengangkutan::where('id', 'like', "PJP-{$today}-%")->count() + 1;
         $pesananId = sprintf("PJP-%s-%04d", $today, $count);
 
+        // Auto-assign: Cek apakah di hari & komplek yang sama sudah ada pesanan yang di-assign petugas
+        $existingOrder = PesananPengangkutan::where('komplek_id', $alamat->komplek_id)
+            ->where('tanggal_penjemputan', $tanggalPenjemputan->format('Y-m-d'))
+            ->whereNotNull('petugas_id')
+            ->first();
+            
+        $petugasId = $existingOrder ? $existingOrder->petugas_id : null;
+
         // Step 6 — DB Transaction
         DB::beginTransaction();
         try {
@@ -140,6 +148,7 @@ class PesananController extends Controller
                 'status'                  => 'menunggu',
                 'status_pembayaran'       => 'paid',
                 'metode_pembayaran'       => 'qris',
+                'petugas_id'              => $petugasId,
             ]);
 
             // 6b. Insert riwayat status pesanan

@@ -51,9 +51,21 @@ class EdukasiController extends Controller
         $data['penulis_admin_id'] = auth()->id();
 
         if ($request->hasFile('gambar_thumbnail')) {
-            $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
-            $data['gambar_thumbnail'] = $request->file('gambar_thumbnail')
-                ->store('edukasi/thumbnail', $disk);
+            $foto = $request->file('gambar_thumbnail');
+            $filename = uniqid('edukasi_') . '.jpg';
+
+            $imageManager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+            $compressedImage = $imageManager->read($foto->getRealPath())
+                                            ->scaleDown(width: 1200)
+                                            ->toJpeg(75);
+
+            \App\Models\DatabaseFile::create([
+                'filename' => $filename,
+                'mime_type' => 'image/jpeg',
+                'data' => $compressedImage->toString(),
+            ]);
+
+            $data['gambar_thumbnail'] = 'db/' . $filename;
         }
 
         ArtikelEdukasi::create($data);
@@ -88,20 +100,27 @@ class EdukasiController extends Controller
         $data = $request->only(['judul', 'kategori', 'konten_html']);
 
         if ($request->hasFile('gambar_thumbnail')) {
-            $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
-
-            // Hapus gambar lama jika ada
-            if ($artikel->gambar_thumbnail) {
-                // Cek apakah path lama (public/edukasi/thumbnail) atau baru (storage)
-                if (str_starts_with($artikel->gambar_thumbnail, 'edukasi/thumbnail/')) {
-                    @unlink(public_path($artikel->gambar_thumbnail));
-                } else {
-                    Storage::disk($disk)->delete($artikel->gambar_thumbnail);
-                }
+            // Hapus gambar lama jika ada dan tersimpan di database
+            if ($artikel->gambar_thumbnail && str_starts_with($artikel->gambar_thumbnail, 'db/')) {
+                $oldFilename = str_replace('db/', '', $artikel->gambar_thumbnail);
+                \App\Models\DatabaseFile::where('filename', $oldFilename)->delete();
             }
 
-            $data['gambar_thumbnail'] = $request->file('gambar_thumbnail')
-                ->store('edukasi/thumbnail', $disk);
+            $foto = $request->file('gambar_thumbnail');
+            $filename = uniqid('edukasi_') . '.jpg';
+
+            $imageManager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+            $compressedImage = $imageManager->read($foto->getRealPath())
+                                            ->scaleDown(width: 1200)
+                                            ->toJpeg(75);
+
+            \App\Models\DatabaseFile::create([
+                'filename' => $filename,
+                'mime_type' => 'image/jpeg',
+                'data' => $compressedImage->toString(),
+            ]);
+
+            $data['gambar_thumbnail'] = 'db/' . $filename;
         }
 
         $artikel->update($data);

@@ -24,10 +24,18 @@ class TugasController extends Controller
     {
         $petugas = auth()->user();
 
-        // Ambil komplek yang ditugaskan ke petugas ini, beserta jumlah pesanan hari ini
-        $kompleks = $petugas->petugasKomplek()
-            ->withCount(['pesanan' => function ($query) {
-                $query->where('tanggal_penjemputan', today())
+        // Ambil ID komplek dari pesanan yang ditugaskan ke petugas ini HARI INI
+        $komplekIds = PesananPengangkutan::where('petugas_id', $petugas->id)
+            ->where('tanggal_penjemputan', today())
+            ->whereIn('status', ['menunggu', 'diproses'])
+            ->pluck('komplek_id')
+            ->unique();
+
+        // Ambil detail komplek beserta jumlah pesanan aktif petugas tersebut
+        $kompleks = \App\Models\Komplek::whereIn('id', $komplekIds)
+            ->withCount(['pesanan' => function ($query) use ($petugas) {
+                $query->where('petugas_id', $petugas->id)
+                      ->where('tanggal_penjemputan', today())
                       ->whereIn('status', ['menunggu', 'diproses']);
             }])
             ->get();
@@ -49,16 +57,20 @@ class TugasController extends Controller
     {
         $user = auth()->user();
 
-        // Pastikan petugas ditugaskan di komplek ini
-        $komplek = $user->petugasKomplek()->where('komplek.id', $komplekId)->firstOrFail();
+        $komplek = \App\Models\Komplek::findOrFail($komplekId);
 
-        // Ambil pesanan hari ini di komplek ini
+        // Ambil pesanan hari ini di komplek ini KHUSUS untuk petugas ini
         $pesanans = PesananPengangkutan::where('komplek_id', $komplekId)
+            ->where('petugas_id', $user->id)
             ->where('tanggal_penjemputan', today())
             ->whereIn('status', ['menunggu', 'diproses'])
             ->with('warga')
             ->orderBy('created_at', 'asc')
             ->get();
+
+        if ($pesanans->isEmpty()) {
+            abort(404, 'Tidak ada tugas di komplek ini untuk Anda.');
+        }
 
         return view('petugas.komplek.warga', compact('komplek', 'pesanans'));
     }
@@ -72,8 +84,10 @@ class TugasController extends Controller
 
         $pesanan = PesananPengangkutan::with(['warga', 'komplek'])->findOrFail($id);
 
-        // Pastikan petugas ditugaskan di komplek pesanan ini
-        $this->authorizeKomplek($user, $pesanan->komplek_id);
+        // Pastikan pesanan ini ditugaskan ke petugas ini
+        if ($pesanan->petugas_id !== $user->id) {
+            abort(403, 'Anda tidak ditugaskan untuk pesanan ini.');
+        }
 
         return view('petugas.tugas.detail', compact('pesanan', 'type'));
     }
@@ -86,8 +100,10 @@ class TugasController extends Controller
         $user = auth()->user();
         $pesanan = PesananPengangkutan::findOrFail($id);
 
-        // Pastikan petugas ditugaskan di komplek pesanan ini
-        $this->authorizeKomplek($user, $pesanan->komplek_id);
+        // Pastikan pesanan ini ditugaskan ke petugas ini
+        if ($pesanan->petugas_id !== $user->id) {
+            abort(403, 'Anda tidak ditugaskan untuk pesanan ini.');
+        }
 
         $statusBaru = $request->input('status');
         $statusLama = $pesanan->status;
@@ -119,9 +135,22 @@ class TugasController extends Controller
             }
 
             if ($statusBaru === 'selesai') {
-                // Upload foto bukti
-                $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
-                $uploadedFilePath = $request->file('foto_bukti')->store('buktipesanan', $disk);
+                // Upload foto bukti menggunakan DatabaseFile
+                $foto = $request->file('foto_bukti');
+                $filename = uniqid('bukti_') . '.jpg';
+
+                $imageManager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+                $compressedImage = $imageManager->read($foto->getRealPath())
+                                                ->scaleDown(width: 1200)
+                                                ->toJpeg(75);
+
+                \App\Models\DatabaseFile::create([
+                    'filename' => $filename,
+                    'mime_type' => 'image/jpeg',
+                    'data' => $compressedImage->toString(),
+                ]);
+
+                $uploadedFilePath = 'db/' . $filename;
 
                 // Kalkulasi koin dari pengaturan sistem
                 $pengaturan = PengaturanSistem::first();
@@ -185,8 +214,10 @@ class TugasController extends Controller
         $user = auth()->user();
         $pesanan = PesananPengangkutan::findOrFail($id);
 
-        // Pastikan petugas ditugaskan di komplek pesanan ini
-        $this->authorizeKomplek($user, $pesanan->komplek_id);
+        // Pastikan pesanan ini ditugaskan ke petugas ini
+        if ($pesanan->petugas_id !== $user->id) {
+            abort(403, 'Anda tidak ditugaskan untuk pesanan ini.');
+        }
 
         $tipeKendala = $request->input('tipe_kendala');
         $uploadedFilePath = null;
@@ -196,8 +227,21 @@ class TugasController extends Controller
         try {
             // Upload foto kendala jika ada
             if ($request->hasFile('foto_kendala')) {
-                $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
-                $uploadedFilePath = $request->file('foto_kendala')->store('fotokendala', $disk);
+                $foto = $request->file('foto_kendala');
+                $filename = uniqid('kendala_') . '.jpg';
+
+                $imageManager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+                $compressedImage = $imageManager->read($foto->getRealPath())
+                                                ->scaleDown(width: 1200)
+                                                ->toJpeg(75);
+
+                \App\Models\DatabaseFile::create([
+                    'filename' => $filename,
+                    'mime_type' => 'image/jpeg',
+                    'data' => $compressedImage->toString(),
+                ]);
+
+                $uploadedFilePath = 'db/' . $filename;
             }
 
             if ($tipeKendala === 'terkunci') {
@@ -364,17 +408,4 @@ class TugasController extends Controller
         return view('petugas.riwayat-detail', compact('item', 'type'));
     }
 
-    /**
-     * Validasi bahwa petugas ditugaskan di komplek tertentu.
-     *
-     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
-     */
-    private function authorizeKomplek($user, int $komplekId): void
-    {
-        $isAssigned = $user->petugasKomplek()->where('komplek.id', $komplekId)->exists();
-
-        if (!$isAssigned) {
-            abort(403, 'Anda tidak ditugaskan di area komplek ini.');
-        }
-    }
 }

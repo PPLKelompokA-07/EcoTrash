@@ -232,6 +232,7 @@
         </div>
     </div>
 
+    <x-camera-modal />
     @stack('scripts')
 </body>
 </html>

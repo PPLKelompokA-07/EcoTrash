@@ -31,7 +31,9 @@ class TindakLanjutController extends Controller
             abort(403, 'Anda tidak memiliki akses ke laporan ini.');
         }
 
-        return view('petugas.laporan.detail', compact('laporan'));
+        $petugas = Auth::user();
+
+        return view('petugas.laporan.detail', compact('laporan', 'petugas'));
     }
 
     /**
@@ -41,6 +43,12 @@ class TindakLanjutController extends Controller
     public function mulai(string $id): JsonResponse
     {
         $laporan = LaporanSampahLiar::findOrFail($id);
+
+        if (Auth::user()->status_kehadiran === 'berhalangan') {
+            return response()->json([
+                'message' => 'Anda tidak dapat memulai pembersihan karena sedang berhalangan.',
+            ], 422);
+        }
 
         // Validasi ownership
         if ($laporan->petugas_id !== Auth::id()) {
@@ -71,6 +79,12 @@ class TindakLanjutController extends Controller
     public function tunda(TundaLaporanRequest $request, string $id): JsonResponse
     {
         $laporan = LaporanSampahLiar::findOrFail($id);
+
+        if (Auth::user()->status_kehadiran === 'berhalangan') {
+            return response()->json([
+                'message' => 'Anda tidak dapat menunda laporan karena sedang berhalangan.',
+            ], 422);
+        }
 
         // Validasi ownership
         if ($laporan->petugas_id !== Auth::id()) {
@@ -119,6 +133,12 @@ class TindakLanjutController extends Controller
     {
         $laporan = LaporanSampahLiar::findOrFail($id);
 
+        if (Auth::user()->status_kehadiran === 'berhalangan') {
+            return response()->json([
+                'message' => 'Anda tidak dapat menyelesaikan pembersihan karena sedang berhalangan.',
+            ], 422);
+        }
+
         // Validasi ownership
         if ($laporan->petugas_id !== Auth::id()) {
             return response()->json([
@@ -141,8 +161,21 @@ class TindakLanjutController extends Controller
         }
 
         // Upload foto hasil pembersihan
-        $disk = config('filesystems.default') === 'local' ? 'public' : config('filesystems.default');
-        $fotoPath = $request->file('foto_hasil')->store('laporan_selesai', $disk);
+        $foto = $request->file('foto_hasil');
+        $filename = uniqid('selesai_') . '.jpg';
+
+        $imageManager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver());
+        $compressedImage = $imageManager->read($foto->getRealPath())
+                                        ->scaleDown(width: 1200)
+                                        ->toJpeg(75);
+
+        \App\Models\DatabaseFile::create([
+            'filename' => $filename,
+            'mime_type' => 'image/jpeg',
+            'data' => $compressedImage->toString(),
+        ]);
+
+        $fotoPath = 'db/' . $filename;
 
         // Update laporan
         $laporan->update([
@@ -150,22 +183,10 @@ class TindakLanjutController extends Controller
             'foto_bukti_selesai_petugas' => $fotoPath,
         ]);
 
-        // Berikan koin reward ke warga (jika ada)
         $koinReward = $laporan->koin_reward;
-        if ($koinReward > 0) {
-            $this->coinService->addCoins(
-                wargaId: $laporan->warga_id,
-                jumlah: $koinReward,
-                sumber: 'laporan_liar',
-                referensiId: (string) $laporan->id
-            );
-        }
 
         // Kirim notifikasi success ke warga
-        $pesanNotif = "Tumpukan sampah di laporan #{$laporan->id} telah dibersihkan!";
-        if ($koinReward > 0) {
-            $pesanNotif .= " Anda mendapat {$koinReward} koin bonus.";
-        }
+        $pesanNotif = "Tumpukan sampah di laporan #{$laporan->id} telah selesai dibersihkan oleh petugas!";
 
         NotificationService::send(
             user: $laporan->warga_id,

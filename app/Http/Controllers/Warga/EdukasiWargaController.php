@@ -27,7 +27,7 @@ class EdukasiWargaController extends Controller
                 return $query->where('kategori', $kategori);
             })
             ->latest()
-            ->paginate(6);
+            ->paginate(12);
 
         // Ambil list ID artikel yang di-bookmark oleh user aktif
         $bookmarkedIds = auth()->user()
@@ -61,7 +61,7 @@ class EdukasiWargaController extends Controller
         $artikels = auth()->user()
             ->bookmarkArtikel()
             ->latest('bookmark_artikel.created_at')
-            ->paginate(6);
+            ->paginate(12);
 
         return view('warga.edukasi.tersimpan', compact('artikels'));
     }

@@ -53,7 +53,7 @@
                     <!-- Photo Evidence -->
                     <div>
                         <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 px-1">Foto Bukti (Wajib)</p>
-                        <label class="block w-full bg-surface border-2 border-dashed border-outline rounded-2xl text-center cursor-pointer hover:bg-surface-variant transition-colors overflow-hidden relative" :class="localPreview ? 'p-0 border-solid' : 'p-6'">
+                        <button type="button" @click="$dispatch('open-camera', { inputId: 'foto_kendala_beda_input' })" class="block w-full bg-surface border-2 border-dashed border-outline rounded-2xl text-center cursor-pointer hover:bg-surface-variant transition-colors overflow-hidden relative" :class="localPreview ? 'p-0 border-solid' : 'p-6'">
                             <div x-show="!localPreview">
                                 <span class="material-symbols-outlined text-on-surface-variant text-[28px] mb-2">add_a_photo</span>
                                 <p class="font-bold text-on-surface text-sm">Ambil Foto Kondisi Asli</p>
@@ -66,8 +66,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <input type="file" accept="image/*" capture="environment" class="hidden" x-ref="fotoKendalaBeda" @change="if($event.target.files.length) localPreview = URL.createObjectURL($event.target.files[0])">
-                        </label>
+                        </button>
+                        <input type="file" id="foto_kendala_beda_input" accept="image/*" class="hidden" x-ref="fotoKendalaBeda" @change="if($event.target.files.length) localPreview = URL.createObjectURL($event.target.files[0])">
                     </div>
                     
                     <button 
@@ -114,7 +114,7 @@
                     <!-- Photo Evidence -->
                     <div>
                         <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 px-1">Foto Kondisi (Wajib)</p>
-                        <label class="block w-full bg-surface border-2 border-dashed border-outline rounded-2xl text-center cursor-pointer hover:bg-surface-variant transition-colors overflow-hidden relative" :class="localPreview ? 'p-0 border-solid' : 'p-6'">
+                        <button type="button" @click="$dispatch('open-camera', { inputId: 'foto_kendala_terkunci_input' })" class="block w-full bg-surface border-2 border-dashed border-outline rounded-2xl text-center cursor-pointer hover:bg-surface-variant transition-colors overflow-hidden relative" :class="localPreview ? 'p-0 border-solid' : 'p-6'">
                             <div x-show="!localPreview">
                                 <span class="material-symbols-outlined text-on-surface-variant text-[28px] mb-2">add_a_photo</span>
                                 <p class="font-bold text-on-surface text-sm">Ambil Foto Pagar</p>
@@ -127,8 +127,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <input type="file" accept="image/*" capture="environment" class="hidden" x-ref="fotoKendalaTerkunci" @change="if($event.target.files.length) localPreview = URL.createObjectURL($event.target.files[0])">
-                        </label>
+                        </button>
+                        <input type="file" id="foto_kendala_terkunci_input" accept="image/*" class="hidden" x-ref="fotoKendalaTerkunci" @change="if($event.target.files.length) localPreview = URL.createObjectURL($event.target.files[0])">
                     </div>
                     
                     <button 

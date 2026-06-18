@@ -61,7 +61,7 @@
                 <div>
                     <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3 px-2">Foto Bukti Pengambilan</p>
                     
-                    <label class="block w-full bg-surface border-2 border-dashed border-outline rounded-3xl p-8 text-center cursor-pointer hover:bg-primary/5 hover:border-primary/50 transition-colors active:scale-[0.98] overflow-hidden relative" :class="imagePreview ? 'p-0 border-solid' : ''">
+                    <button type="button" @click="$dispatch('open-camera', { inputId: 'foto_bukti_input' })" class="block w-full bg-surface border-2 border-dashed border-outline rounded-3xl p-8 text-center cursor-pointer hover:bg-primary/5 hover:border-primary/50 transition-colors active:scale-[0.98] overflow-hidden relative" :class="imagePreview ? 'p-0 border-solid' : ''">
                         <div x-show="!imagePreview">
                             <div class="w-16 h-16 rounded-full bg-primary/20 text-primary flex items-center justify-center mx-auto mb-3 shadow-sm">
                                 <span class="material-symbols-outlined text-[32px]">photo_camera</span>
@@ -77,8 +77,9 @@
                                 </div>
                             </div>
                         </div>
-                        <input type="file" accept="image/*" capture="environment" class="hidden" x-ref="fotoBukti" @change="if($event.target.files.length) imagePreview = URL.createObjectURL($event.target.files[0])">
-                    </label>
+                    </button>
+                    <!-- Input tersembunyi -->
+                    <input type="file" id="foto_bukti_input" accept="image/*" class="hidden" x-ref="fotoBukti" @change="if($event.target.files.length) imagePreview = URL.createObjectURL($event.target.files[0])">
                 </div>
 
                 <!-- Tombol Kendala Lapangan -->

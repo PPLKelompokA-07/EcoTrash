@@ -29,6 +29,12 @@ class ArtikelEdukasi extends Model
     public function getThumbnailUrlAttribute(): ?string
     {
         if (!$this->gambar_thumbnail) return null;
+        if (str_starts_with($this->gambar_thumbnail, 'http://') || str_starts_with($this->gambar_thumbnail, 'https://')) {
+            return $this->gambar_thumbnail;
+        }
+        if (str_starts_with($this->gambar_thumbnail, 'db/')) {
+            return url('images/' . $this->gambar_thumbnail);
+        }
         // Jika path lama (dimulai dengan 'edukasi/thumbnail'), gunakan asset()
         if (str_starts_with($this->gambar_thumbnail, 'edukasi/thumbnail/')) {
             return asset($this->gambar_thumbnail);

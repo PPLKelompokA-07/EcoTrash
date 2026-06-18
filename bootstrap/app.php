@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'address.setup' => \App\Http\Middleware\EnsureAddressSetup::class,
+            'check.petugas.status' => \App\Http\Middleware\CheckPetugasStatus::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

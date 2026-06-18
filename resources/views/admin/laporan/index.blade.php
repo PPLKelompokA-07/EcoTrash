@@ -152,6 +152,12 @@
                                 <p class="text-on-surface-variant font-medium">Deskripsi Warga</p>
                                 <p class="text-on-surface bg-surface-dim p-3 rounded-lg border border-outline mt-1" x-text="selectedLaporan.deskripsi"></p>
                             </div>
+                            <template x-if="selectedLaporan.status === 'selesai' && selectedLaporan.foto_bukti_selesai">
+                                <div class="col-span-2">
+                                    <p class="text-on-surface-variant font-medium mt-2">Foto Bukti Selesai Petugas</p>
+                                    <img :src="selectedLaporan.foto_bukti_selesai" alt="Foto Bukti Selesai" class="w-full h-40 object-cover rounded-lg border border-outline mt-1">
+                                </div>
+                            </template>
                             <template x-if="selectedLaporan.status !== 'menunggu'">
                                 <div class="col-span-2">
                                     <p class="text-on-surface-variant font-medium">Status</p>

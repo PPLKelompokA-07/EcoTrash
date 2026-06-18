@@ -25,10 +25,45 @@
     fotoPreview: null,
     deskripsi: '',
     showForm: window.innerWidth >= 768, /* Auto show form sidebar on desktop */
+    isLocating: false,
     handleFile(e) {
         if(e.target.files.length > 0){
             this.fotoPreview = URL.createObjectURL(e.target.files[0]);
         }
+    },
+    getCurrentLocation() {
+        if (!navigator.geolocation) {
+            alert('Geolokasi tidak didukung oleh browser Anda.');
+            return;
+        }
+        
+        this.isLocating = true;
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                this.isLocating = false;
+                if (window.map) {
+                    window.map.setView([position.coords.latitude, position.coords.longitude], 16, { animate: true });
+                }
+            },
+            (error) => {
+                this.isLocating = false;
+                let errorMessage = 'Gagal mendapatkan lokasi.';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = 'Akses lokasi ditolak oleh pengguna.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'Informasi lokasi tidak tersedia.';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = 'Waktu permintaan lokasi habis.';
+                        break;
+                }
+                alert(errorMessage);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
     },
     init() {
         window.addEventListener('resize', () => {
@@ -47,8 +82,9 @@
         <!-- UI Over Map (Mobile Top, Desktop Bottom Right) -->
         <div class="absolute top-4 left-4 right-4 md:top-auto md:bottom-6 md:left-auto md:right-6 z-20 pointer-events-auto flex flex-col items-end gap-3">
             
-            <button @click="map.setView([-6.200000, 106.816666], 15)" class="bg-white/95 backdrop-blur-md text-primary font-bold p-3 rounded-full shadow-lg border border-outline flex items-center justify-center hover:bg-surface-variant transition-colors group tooltip-trigger relative">
-                <span class="material-symbols-outlined group-hover:scale-110 transition-transform">my_location</span>
+            <!-- Tombol Lokasi Desktop -->
+            <button @click="getCurrentLocation()" :disabled="isLocating" class="hidden md:flex bg-white/95 backdrop-blur-md text-primary font-bold p-3 rounded-full shadow-lg border border-outline items-center justify-center hover:bg-surface-variant transition-colors group tooltip-trigger relative disabled:opacity-70 disabled:cursor-wait">
+                <span class="material-symbols-outlined transition-transform" :class="isLocating ? 'animate-spin' : 'group-hover:scale-110'" x-text="isLocating ? 'sync' : 'my_location'"></span>
                 <span class="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-surface-variant text-on-surface text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Lokasi Saat Ini</span>
             </button>
 
@@ -62,9 +98,15 @@
         </div>
 
         <!-- FAB Lanjut (Mobile Only) -->
-        <div class="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] left-1/2 -translate-x-1/2 z-[55] pointer-events-auto w-[90%] max-w-sm md:hidden" x-show="!showForm" x-transition>
+        <div class="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] left-1/2 -translate-x-1/2 z-[55] pointer-events-auto w-[90%] max-w-sm md:hidden flex flex-col items-end gap-4" x-show="!showForm" x-transition>
+            
+            <!-- Tombol Lokasi Mobile -->
+            <button @click="getCurrentLocation()" :disabled="isLocating" class="bg-white/95 backdrop-blur-md text-primary font-bold p-3 rounded-full shadow-lg border border-outline flex items-center justify-center hover:bg-surface-variant transition-colors disabled:opacity-70 disabled:cursor-wait active:scale-95">
+                <span class="material-symbols-outlined transition-transform" :class="isLocating ? 'animate-spin' : ''" x-text="isLocating ? 'sync' : 'my_location'"></span>
+            </button>
+
             <button @click="showForm = true" class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-xl shadow-primary/30 hover:bg-primary-dark transition-transform active:scale-95 flex justify-center items-center gap-2">
-                <span class="material-symbols-outlined text-[20px]">my_location</span>
+                <span class="material-symbols-outlined text-[20px]">pin_drop</span>
                 Gunakan Lokasi Ini
             </button>
         </div>
@@ -125,12 +167,12 @@
                         <input type="file" id="foto" name="foto" accept="image/*" class="hidden" @change="handleFile">
                         
                         <template x-if="!fotoPreview">
-                            <label for="foto" class="w-full h-40 md:h-48 border-2 border-dashed border-primary/40 rounded-2xl bg-primary/5 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-primary/10 transition-colors text-primary group">
+                            <button type="button" @click="$dispatch('open-camera', { inputId: 'foto' })" class="w-full h-40 md:h-48 border-2 border-dashed border-primary/40 rounded-2xl bg-primary/5 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-primary/10 transition-colors text-primary group">
                                 <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-[28px]">add_a_photo</span>
                                 </div>
-                                <span class="text-sm font-bold text-primary">Unggah Foto Lokasi</span>
-                            </label>
+                                <span class="text-sm font-bold text-primary">Ambil Foto Lokasi</span>
+                            </button>
                         </template>
 
                         <template x-if="fotoPreview">
